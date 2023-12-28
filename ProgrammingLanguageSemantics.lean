@@ -246,9 +246,10 @@ inductive Eval : Term → Term → Prop
 
 theorem preservation (t : Term) (τ : TType) (Γ : TypingContext) :
   TypeJudgment Γ t τ →
-  TypeJudgment Γ (eval 10 [] t) τ := 
-  by 
-    sorry
+  Eval t t' ->
+  TypeJudgment Γ t' τ :=
+  sorry
+
 
 /-!
 
@@ -265,5 +266,6 @@ Progress is a key property of type systems, and it's very strong one: it says th
 
 
 theorem progress (t : Term) (τ : TType) (Γ : TypingContext) :
-  TypeJudgment Γ t τ →
-  (is_value t ∨ (∃ t', Eval t t')) := sorry
+  TypeJudgment Γ t τ → 
+  (is_value t ∨ (∃ t', Eval t t')) := 
+  sorry
