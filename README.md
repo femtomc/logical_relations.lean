@@ -3,7 +3,12 @@ The study of programming languages involves an imposing combination of theory, m
 
 But you can't teach if you don't know that what you're talking about is correct. Hence, a plan formed -- what if I learn, and transcribe what I learn as code in Lean 4, which will then allow me to prove that what I'm saying is correct.
 
+
+<p align="center">
+
 [The result is a literate Lean document.](https://femtomc.github.io/pls.lean/)
+
+</p>
 
 ---
 
