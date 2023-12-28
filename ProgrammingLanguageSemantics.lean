@@ -248,8 +248,42 @@ theorem preservation (t : Term) (τ : TType) (Γ : TypingContext) :
   TypeJudgment Γ t τ →
   Eval t t' ->
   TypeJudgment Γ t' τ :=
-  sorry
+  by
+    intro h_typing h_eval
+    induction h_typing
 
+    case Type_Nat => {
+      cases h_eval
+      exact TypeJudgment.Type_Nat _
+    }
+
+    case Type_Var => {
+      cases h_eval
+    }
+
+    case Type_Prim => {
+      cases h_eval
+    }
+
+    case Type_Abs => {
+      cases h_eval
+    }
+
+    case Type_App => {
+      cases h_eval
+      case Eval_Prim => {
+        admit
+      }
+      case Eval_App1 => {
+        admit
+      }
+      case Eval_App2 => {
+        admit
+      }
+      case Eval_App_Abs => {
+        admit
+      }
+    }
 
 /-!
 
