@@ -1,9 +1,21 @@
-import Mathlib
+import Init.Prelude
+import Mathlib.Data.Nat.Basic
+import Lean
 
 /-!
-This is a tutorial file showing the usage of logical relations to prove properties about languages, including things like soundness of a type system, and even soundness of a denotational semantics.
 
-First, we'll start by considering a simple language with arithmetic, and function definitions.
+Lesson 1: lambda calculus design
+
+We'll start by considering a simple language with arithmetic, and function definitions.
+
+* We separate the meta-types of the language into two categories: syntax, and values.
+
+* The type of syntax will be called `Term`, and the type of the values will be called `Value`.
+
+* We want to define an evaluation semantics: a rule system which includes a rewrite rule that allows us to manipulate the syntax.
+
+* Our key theorem is that, if the rule system terminates, then the resulting syntax must be a value.
+
 -/
 
 inductive Term
@@ -58,4 +70,16 @@ def eval : ℕ -> Env → Term → Term
   let t2_eval := eval fuel env t2;
   eval fuel env (Term.App t1_eval t2_eval)
 
+-- Nicely, we can run our evaluation interpreter and get results, but
+-- we have to give it fuel!
 #eval eval 10 [] (Term.App (Term.Abs (Term.Var 0)) (Term.Nat 5))
+
+/-!
+
+Lesson 2: Type systems 
+
+In Lesson 2, we'll add types to the language, and prove that the type system is sound with respect to the operational semantics.
+
+We'll do this using a technique called logical relations.
+
+-/

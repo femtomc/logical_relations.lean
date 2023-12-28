@@ -49,11 +49,11 @@
   {"url": "https://github.com/leanprover-community/mathlib4.git",
    "type": "git",
    "subDir": null,
-   "rev": "93e820f3619d1e6ec775246653c587c04439de0c",
+   "rev": "6cab3d646c38b08ac405dd08d69f9cd87938b5c1",
    "name": "mathlib",
    "manifestFile": "lake-manifest.json",
    "inputRev": null,
    "inherited": false,
    "configFile": "lakefile.lean"}],
- "name": "intro_logical_relations",
+ "name": "ProgrammingLanguageSemantics",
  "lakeDir": ".lake"}
