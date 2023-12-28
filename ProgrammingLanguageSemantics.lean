@@ -1,5 +1,6 @@
 import Init.Prelude
 import Mathlib.Data.Nat.Basic
+import Mathlib.Tactic.LibrarySearch
 import Lean
 
 /-!
@@ -23,7 +24,7 @@ We'll start by considering a language with arithmetic, function abstraction, and
 
 * We separate the meta-types of the language into two categories: syntax, and values.
 
-* The type of syntax will be called `Term`, and the type of the values will be called `Value`.
+* The inductive type of syntax will be called `Term`, and the type of the values will be denoted by an indicator function operating on `Term`.
 
 * We want to define an evaluation semantics: a rule system which includes a rewrite rule that allows us to manipulate the syntax.
 
@@ -72,17 +73,17 @@ A term in a lambda calculus language is a syntactic entity that represents a com
 ----
 -/
 
-inductive Value
-| Nat : ℕ → Value
-| Prim : Term -> Value
-| Abs : Term -> Value
-deriving Repr
+def is_value : Term → Prop
+| Term.Nat _ => true
+| Term.Prim _ => true
+| Term.Abs _ => true
+| _ => false
 
 /-!
 
 ----
 
-A value is a special kind of term that represents a computed result and cannot be reduced or evaluated further.
+The notion of a value denotes a subset of the inductive type `Term`: a value represents a computed result that cannot be reduced or evaluated further.
 
 * Values are terms that are in normal form or weak head normal form (whnf), meaning there are no more computation steps that can be applied to them to reduce them further.
 
@@ -115,23 +116,107 @@ def subst : ℕ -> Term -> Term -> Term
 
 -- In Lean, we can define the operational semantics of our language as a recursive function.
 -- But there's something interesting: note that we have to give it a fuel argument, so that Lean knows that the recursion will terminate.
-def eval : ℕ -> Env → Term → Term
-| 0, _, t@(_) => t
-| _, _, Term.Nat n => Term.Nat n
-| _, env, Term.Var n => (lookupEnv env n).getD (Term.Var n)
-| fuel + 1, env, Term.Abs t => Term.Abs (eval fuel (Term.Var 0 :: env.map (shift 1)) t)
-| _, _, Term.Prim f => Term.Prim f
-| fuel + 1, env, (Term.App (Term.Abs t) v) =>
-  let v_eval := eval fuel env v; 
-  eval fuel env (subst 0 v_eval t) 
-| fuel + 1, env, (Term.App t1 t2) =>
-  let t1_eval := eval fuel env t1;
-  let t2_eval := eval fuel env t2;
-  eval fuel env (Term.App t1_eval t2_eval)
+def eval : ℕ → Env → Term → Option Term
+| 0, _, _ => none
+| _, _, Term.Nat n => some (Term.Nat n)
+| _, env, Term.Var n => lookupEnv env n
+| fuel + 1, env, Term.Abs t => do
+    let t_eval <- eval fuel (Term.Var 0 :: env.map (shift 1)) t;
+    return Term.Abs t_eval
+| _, _, Term.Prim f => some (Term.Prim f)
+| fuel + 1, env, Term.App (Term.Abs t) v => do
+    let v_eval <- eval fuel env v;
+    eval fuel env (subst 0 v_eval t)
+| fuel + 1, env, Term.App t1 t2 => do
+    let t1_eval <- eval fuel env t1;
+    let t2_eval <- eval fuel env t2;
+    eval fuel env (Term.App t1_eval t2_eval)
 
 -- We can run our evaluation interpreter and get results, but
 -- we have to give it fuel!
 #eval eval 10 [] (Term.App (Term.Abs (Term.Var 0)) (Term.Nat 7))
+
+/-!
+
+----
+
+Now, let's write out first theorem: if the evaluation semantics terminates, then the result must be a value.
+
+----
+
+-/
+
+theorem if_halts_then_value (fuel : ℕ) (t : Term) :
+  ∀ (t' : Term), fuel != 0 ∧ eval fuel [] t = some t' →
+  is_value t' :=
+  by {
+    intros t' h_eval
+    cases h_eval with 
+    | intro h_neq h_eval => {
+      induction t
+      case intro.Nat => {
+          rw [eval] at h_eval
+          injection h_eval with h_eq
+          simp [<-h_eq, is_value]
+          intro fuel_eq_0
+          rw [fuel_eq_0] at h_neq
+          contradiction
+      }
+      
+      case intro.Var => {
+        rw [eval] at h_eval
+        rw [lookupEnv] at h_eval
+        contradiction
+        intro fuel_eq_0
+        rw [fuel_eq_0] at h_neq
+        contradiction
+      }
+
+      case intro.Prim => {
+        rw [eval] at h_eval
+        injection h_eval with h_eq
+        simp [<-h_eq, is_value]
+        intro fuel_eq_0
+        rw [fuel_eq_0] at h_neq
+        contradiction
+      }
+      
+      case intro.Abs => {
+        let fuel' := fuel - 1
+        have h_fuel_eq : fuel = fuel' + 1 := by {
+          simp [fuel']
+          induction fuel
+          contradiction
+          exact rfl
+        }
+        rw [h_fuel_eq] at h_eval
+        rw [eval] at h_eval
+        cases eval_res : eval fuel' (Term.Var 0 :: List.map (shift 1) []) _
+        
+        case none => {
+          rw [eval_res] at h_eval
+          have h_none : (do 
+                            let t_eval ← none
+                            pure (Term.Abs t_eval)
+          ) = none := rfl
+          rw [h_none] at h_eval
+          contradiction
+        }
+        
+        case some => {
+          rw [eval_res] at h_eval
+          have h_eval_simp : some (Term.Abs ?x) = some t' := by exact h_eval
+          injection h_eval_simp with h_eq
+          simp [<-h_eq]
+          exact rfl
+        }
+      }
+      
+      case intro.App => {
+        sorry
+      }
+    }
+  }
 
 /-!
 
@@ -215,11 +300,6 @@ But to study the interaction between our evaluation semantics and the type syste
 
 -/
 
-def is_value : Term → Prop
-| Term.Nat _ => true
-| Term.Prim _ => true
-| Term.Abs _ => true
-| _ => false
 
 -- The small-step evaluation relation for the language.
 inductive Eval : Term → Term → Prop
