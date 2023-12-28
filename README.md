@@ -10,8 +10,6 @@ But you can't teach if you don't know that what you're talking about is correct.
 
 </div>
 
----
-
 ## Things to keep in mind
 
 This repository reflects my own learning goals.
