@@ -1,11 +1,9 @@
-# (Lean 4) A foray into PL semantics
+# (Lean) Programming language semantics 
 The study of programming languages involves an imposing combination of theory, mathematics, and practical understanding of certain models of computation. I'm still learning myself, and a good way to learn is to teach...
 
 But you can't teach if you don't know that what you're talking about is correct. Hence, a plan formed -- what if I learn, and transcribe what I learn as code in Lean 4, which will then allow me to prove that what I'm saying is correct.
 
-Hence, this repository.
-
-[The result is a literate Lean document.]
+[The result is a literate Lean document.](https://femtomc.github.io/pls.lean/)
 
 ---
 
