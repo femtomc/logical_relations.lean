@@ -248,7 +248,7 @@ theorem preservation (t : Term) (τ : TType) (Γ : TypingContext) :
   TypeJudgment Γ t τ →
   Eval t t' ->
   TypeJudgment Γ t' τ :=
-  by
+  by {
     intro h_typing h_eval
     induction h_typing
 
@@ -284,6 +284,7 @@ theorem preservation (t : Term) (τ : TType) (Γ : TypingContext) :
         admit
       }
     }
+  }
 
 /-!
 
