@@ -146,12 +146,9 @@ def eval : ℕ -> Env → Term → Term
 
     -- The Rime of the Simply Typed Mariner, 1834
 
-In Lesson 2, we'll add types to the language, and prove that the type system is sound with respect to the operational semantics. 
-What soundness means is that if the type system says a term has a certain type, then the operational semantics will never get stuck when evaluating that term.
+In Lesson 2, we'll add types to the language, and prove that a few key theorems relating the type system to the operational semantics. 
 
-We'll formulate this statement, and then prove it using a technique called logical relations.
-
-This will be our first look at logical relations, which is a powerful technique for proving theorems about programming language semantics.
+These theorems are called *preservation* and *progress*.
 
 ----
 -/
@@ -164,7 +161,7 @@ inductive TType
 
 ----
 
-Our types are simple: we have natural numbers, and functions from one type to another. For pedagogy, we're not going to demonstrate how type systems avoid errors related to arithmetic (like passing Boolean values to functions which expect numbers).
+For our types, we have natural numbers, and functions from one type to another. For pedagogy, we're not going to demonstrate how type systems avoid errors related to arithmetic (like passing Boolean values to functions which expect numbers).
 
 ----
 
@@ -202,6 +199,51 @@ inductive TypeJudgment : TypingContext → Term → TType → Prop
     TypeJudgment Γ t2 τ1 →
     TypeJudgment Γ (Term.App t1 t2) τ2
 
+/-!
+
+----
+
+Now, before we move onto to study how the type system and our evaluation semantics interact, we're going to perform a slight refactoring of our evaluation semantics to make it easier to state the theorems that we want to prove.
+
+The refactoring is that we're going to write an evaluation *relation* and use that in our theorem statements instead of an interpreter. 
+
+An interpreter is an implementation, but a relation is a specification. Later on, we're going to prove that our interpreter satisfies the specification - which will involve reasoning about how the interpreter works.
+
+But to study the interaction between our evaluation semantics and the type system, we don't need to concern ourselves with the details of how a particular implementation works, and that's where the evaluation relation comes in.
+
+----
+
+-/
+
+def is_value : Term → Prop
+| Term.Nat _ => true
+| Term.Prim _ => true
+| Term.Abs _ => true
+| _ => false
+
+-- The small-step evaluation relation for the language.
+inductive Eval : Term → Term → Prop
+
+| Eval_Nat {n : ℕ} :
+    Eval (Term.Nat n) (Term.Nat n)
+
+| Eval_Prim {f : ℕ → ℕ → ℕ} {n1 n2 : ℕ} :
+    Eval (Term.App (Term.App (Term.Prim f) (Term.Nat n1)) (Term.Nat n2)) (Term.Nat (f n1 n2))
+
+| Eval_App1 {t1 t1' t2 : Term} :
+    Eval t1 t1' →
+    Eval (Term.App t1 t2) (Term.App t1' t2)
+
+| Eval_App2 {v1 t2 t2' : Term} :
+    is_value v1 →
+    Eval t2 t2' →
+    Eval (Term.App v1 t2) (Term.App v1 t2')
+
+| Eval_App_Abs {t v : Term} :
+    is_value v →
+    Eval (Term.App (Term.Abs t) v) (subst 0 v t)
+
+
 theorem preservation (t : Term) (τ : TType) (Γ : TypingContext) :
   TypeJudgment Γ t τ →
   TypeJudgment Γ (eval 10 [] t) τ := 
@@ -212,9 +254,16 @@ theorem preservation (t : Term) (τ : TType) (Γ : TypingContext) :
 
 ----
 
-Preservation is the property that if a term has a type, then evaluating that term will not change its type.
+Progress is the property that if a term is well-typed, then it's either a value or it can be reduced further.
 
-More formally: if a term `t` is well-typed and evaluates to a term `t'` (according to evaluation semantics), then `t'` is also well-typed with the same type as `t`. Short & formal: if `Γ ⊢ t : τ` and `t → t'`, then `Γ ⊢ t' : τ`.
+Progress is a key property of type systems, and it's very strong one: it says that a well-typed term can't get stuck under evaluation. Evaluation can get stuck in two ways: either it can fail to terminate, or it can fail to reduce further.
+
+----
 
 
 -/
+
+
+theorem progress (t : Term) (τ : TType) (Γ : TypingContext) :
+  TypeJudgment Γ t τ →
+  (is_value t ∨ (∃ t', Eval t t')) := sorry
