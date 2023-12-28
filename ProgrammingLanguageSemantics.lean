@@ -8,7 +8,7 @@ import Lean
 Programming language semantics
 ==============================
 
-`This entire notebook is a Lean file <https://github.com/femtomc/pls.lean/blob/main/ProgrammingLanguageSemantics.lean>`_, which means that it's a program that Lean can compile and run.
+`This entire notebook is a Lean file <https://github.com/femtomc/pls.lean/blob/main/ProgrammingLanguageSemantics.lean>`_, which means that it's a program that Lean can compile, check, and run.
 
 ----
 
